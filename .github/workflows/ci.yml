@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -7,6 +7,10 @@ on:
   pull_request:
     branches:
       - main
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   build:
@@ -21,3 +25,15 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t nginx-website:test .
+
+      - name: Login to GitHub Container Registry
+        if: github.event_name == 'push'
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build and push Docker image
+        if: github.event_name == 'push'
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}/nginx-website"
+          docker build -t "$IMAGE:latest" -t "$IMAGE:$GITHUB_SHA" .
+          docker push "$IMAGE:latest"
+          docker push "$IMAGE:$GITHUB_SHA"
