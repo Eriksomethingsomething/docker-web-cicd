@@ -1,0 +1,12 @@
+services:
+  website:
+    image: ghcr.io/eriksomethingsomething/dokcer-web-cicd/nginx-website:latest
+    container_name: nginx-website
+    ports:
+      - "8082:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
